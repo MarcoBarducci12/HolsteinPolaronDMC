@@ -1,25 +1,22 @@
 import random
 import time
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.lines import Line2D
-import numba
+import argparse
 
-
-def create_initial_diagram(order, mu, omega, g, time_scaling):
+def create_initial_diagram(args : argparse.Namespace):
     """Produce initial diagram for Holstein polaron in the tight
     binding limit.
     Default value are provided if the user does not write
     command line values for the simulation parameters
     """
-    diagram = {'order': order,
-               'phonon_energy': omega,
+    diagram = {'order': args.order,
+               'phonon_energy': args.omega,
                'phonon_list': [],
-               'electron_energy': mu,
+               'electron_energy': args.mu,
                'electron_gen_time': 0,
                'electron_rem_time': 1,
-               'ep_coupling': g,
-               'time_scaling': time_scaling,
+               'ep_coupling': args.g,
+               'time_scaling': args.time_scaling,
                'total_energy': 0}
     return diagram
 
@@ -35,8 +32,7 @@ def generate_phonon() -> dict:
 
 def get_phonon(diagram: dict) -> tuple :
     """Retrieve randomly a phonon from the one in the diagram"""
-    phonon_number = len(diagram['phonon_list'])
-    phonon_tag = random.randint(0, phonon_number-1)
+    phonon_tag = random.randrange(len(diagram['phonon_list']))
     return (diagram['phonon_list'][phonon_tag], phonon_tag)
 
 def add_phonon_scaling(diagram):
@@ -50,7 +46,6 @@ def weigth_ratio_add(diagram, phonon):
                            (phonon['rem_time'] - phonon['gen_time']))
     if abs(add_phonon_scaling(diagram)*phonon_propagator) == 0.0:
         raise ValueError("Underflow error in evaluating phonon propagator\n")
-        return None
 
     return add_phonon_scaling(diagram)*phonon_propagator
 
@@ -61,7 +56,6 @@ def weigth_ratio_remove(diagram, phonon):
                             (phonon['rem_time'] - phonon['gen_time']))
     if np.isinf(phonon_propagator/add_phonon_scaling(diagram)) == True:
         raise ValueError("Overflow Error in evaluating phonon propagator\n")
-        #return None
 
     return phonon_propagator/add_phonon_scaling(diagram)
 
@@ -167,8 +161,7 @@ def runDiagrammaticMonteCarlo(args) -> dict :
         diagram energy for each sample
     """
     updates = [eval_add_internal, eval_remove_internal]
-    diagram = create_initial_diagram(args.order, args.mu, args.omega,
-                                     args.g, args.time_scaling)
+    diagram = create_initial_diagram(args)
     diagrams_info = {'Order_sequence' : [diagram['order']],
                      'Energy_sequence': [diagram['total_energy']],
                      'Invalid_diagrams': 0}
@@ -191,53 +184,3 @@ def runDiagrammaticMonteCarlo(args) -> dict :
     end = time.time()
     print(end - start)
     return diagrams_info
-
-def eval_mean_energy(energy_sequence : list) -> float :
-    """Parameters: energy_sequence, list of energy evaluated for each
-    diagram samped
-    Return: mean energy value evaluated over all diagrams sampled
-    """
-    return np.mean(np.array(energy_sequence))
-
-def eval_mean_order(order_sequence : list) -> float :
-    """Parameters: order_sequence, list of order of each diagram sampled
-    Return: mean order evaluated over all diagrams sampled
-    """
-    return np.mean(np.array(order_sequence))
-
-def plotMonteCarlo(diagrams_info : dict):
-    """ Allow use of LaTeX font in graphics
-        Return an histogram:
-       -optimized binning divisions
-       -occurrences for each bin are normalized to the number of samples
-       -plot the sampled probability distribution vs the analitycal one
-    """
-    plt.rcParams['text.usetex'] = True
-    n , bins, patches = plt.hist(x=diagrams_info['Order_sequence'], density=True, bins='auto',
-             color='blue', alpha=0.8)
-    #ticks = [(patch.xy[0] + patch.xy[0] + patch._width)/2 for patch in patches]
-    #plt.xticks(ticks)
-
-    """Define labels entry for legend"""
-    mean_order = eval_mean_order(diagrams_info['Order_sequence'])
-    order_label = 'Mean diagram order: ' + f'{mean_order:.5f}'
-
-    mean_energy = eval_mean_energy(diagrams_info['Energy_sequence'])
-    energy_label = 'Mean energy: ' + f'{mean_energy:.5f}'
-
-    invalid_diagrams = diagrams_info['Invalid_diagrams']
-    inv_diag_label = 'Number of invalid diagrams: ' + f'{invalid_diagrams}'
-    legend_elements = [Line2D([0], [0], color='b', label=order_label),
-                       Line2D([0], [0], color='r', label=energy_label),
-                       Line2D([0], [0], color='g', label=inv_diag_label)]
-
-    #n, bins, patches
-    # xlin=np.linspace(start=norm.ppf(0.001), stop=norm.ppf(0.999), num=200)
-    # plt.plot(xlin, norm.pdf(xlin), linestyle='-', color='red',
-    #        label=r'$f(x) = \frac{\exp(-x^2/2)}{\sqrt{2\pi}}$')
-    plt.xlabel('Diagram order')
-    plt.ylabel(r'Sampled probability distribution')
-    plt.yscale("log")
-    plt.legend(handles=legend_elements)
-    plt.savefig("DiagramOrderDistribution.png")
-    plt.show()

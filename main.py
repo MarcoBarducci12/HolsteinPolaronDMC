@@ -1,4 +1,5 @@
 import dmc
+import plot
 import argparse
 
 """From command line we can pass general values for the parameters of the
@@ -27,5 +28,5 @@ if __name__ == "__main__":
 
     args=parser.parse_args()
     diagrams_info = dmc.runDiagrammaticMonteCarlo(args)
-    dmc.plotMonteCarlo(diagrams_info)
+    plot.plotMonteCarlo(diagrams_info)
     #print(dmc.plotMonteCarlo.__doc__)

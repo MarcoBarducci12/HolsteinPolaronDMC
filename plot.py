@@ -1,6 +1,10 @@
 """Module that contains utilities functions to display plots and useful
 quantities"""
 
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
 def eval_mean_energy(energy_sequence : list) -> float :
     """Parameters: energy_sequence, list of energy evaluated for each
     diagram samped
