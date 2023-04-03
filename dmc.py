@@ -50,7 +50,7 @@ def weigth_ratio_add(diagram, phonon):
                            (phonon['rem_time'] - phonon['gen_time']))
     if abs(add_phonon_scaling(diagram)*phonon_propagator) == 0.0:
         raise ValueError("Underflow error in evaluating phonon propagator\n")
-        #return None
+        return None
 
     return add_phonon_scaling(diagram)*phonon_propagator
 
@@ -59,7 +59,6 @@ def weigth_ratio_remove(diagram, phonon):
     """Evaluate weigth_ratio between proposed and current Feynman diagram"""
     phonon_propagator = np.exp(diagram['time_scaling']*diagram['phonon_energy']*
                             (phonon['rem_time'] - phonon['gen_time']))
-    #print(phonon_propagator)
     if np.isinf(phonon_propagator/add_phonon_scaling(diagram)) == True:
         raise ValueError("Overflow Error in evaluating phonon propagator\n")
         #return None
@@ -156,7 +155,7 @@ def eval_diagram_energy(diagram):
         energy = 0
         for phonon in diagram['phonon_list']:
             energy += diagram['phonon_energy']*(phonon['rem_time']-phonon['gen_time'])
-        energy = energy - diagram['order']
+        energy = (energy - diagram['order'])/diagram['time_scaling']
         diagram['total_energy'] = energy
 
 
@@ -170,7 +169,6 @@ def runDiagrammaticMonteCarlo(args) -> dict :
     updates = [eval_add_internal, eval_remove_internal]
     diagram = create_initial_diagram(args.order, args.mu, args.omega,
                                      args.g, args.time_scaling)
-    #print(diagram['time_scaling'])
     diagrams_info = {'Order_sequence' : [diagram['order']],
                      'Energy_sequence': [diagram['total_energy']],
                      'Invalid_diagrams': 0}
