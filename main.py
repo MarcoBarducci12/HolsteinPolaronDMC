@@ -1,6 +1,8 @@
-import dmc
-import plot
 import argparse
+import random
+from dmc import runDiagrammaticMonteCarlo
+import plot
+from polaron import Polaron
 
 """From command line we can pass general values for the parameters of the
    simulation such as the energy of both electron and phonon and the
@@ -27,6 +29,6 @@ parser.add_argument('--time', dest='time_scaling', type=float, default=1.0,
 if __name__ == "__main__":
 
     args=parser.parse_args()
-    diagrams_info = dmc.runDiagrammaticMonteCarlo(args)
+    polaron = Polaron(args)
+    diagrams_info = runDiagrammaticMonteCarlo(polaron, args)
     plot.plotMonteCarlo(diagrams_info)
-    #print(dmc.plotMonteCarlo.__doc__)
