@@ -48,7 +48,6 @@ class Polaron:
         """Evaluate weigth_ratio between proposed and current Feynman diagram"""
         phonon_propagator = np.exp(-self.diagram['time_scaling']*self.diagram['phonon_energy'] *
                             (phonon['rem_time'] - phonon['gen_time']))
-        #print(phonon_propagator)
         if abs(self.add_phonon_scaling()*phonon_propagator) == 0.0:
             raise ValueError("Underflow error in evaluating phonon propagator\n")
 
@@ -76,7 +75,6 @@ class Polaron:
         try:
             prob = self.weigth_ratio_add(phonon) * \
                 self.proposal_add_ratio(phonon)
-            print(prob, "Evaluated prob")
         except ValueError as error:
             print(f"ValueError: {error}, {error.__class__}")
             raise ValueError("Add internal will not be performed in DMC") from error
@@ -106,7 +104,6 @@ class Polaron:
         """Evaluate weigth_ratio between proposed and current Feynman diagram"""
         phonon_propagator = np.exp(self.diagram['time_scaling']*self.diagram['phonon_energy']*
                                 (phonon['rem_time'] - phonon['gen_time']))
-        #print(phonon_propagator)
         if np.isinf(phonon_propagator/self.add_phonon_scaling()) is True:
             raise ValueError("Overflow Error in evaluating phonon propagator\n")
 
@@ -134,7 +131,6 @@ class Polaron:
         try:
             acceptance_prob = self.weigth_ratio_remove(phonon) * \
                 self.proposal_remove_ratio(phonon)
-            print(acceptance_prob, "Evaluated prob")
         except ValueError as error:
             print(f"ValueError: {error}, {error.__class__}")
             raise ValueError("Remove internal will not be performed in DMC") from error
