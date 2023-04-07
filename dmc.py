@@ -2,27 +2,29 @@
 Holstein polaron. """
 
 import argparse
-from polaron import Polaron
 import random
+from polaron import Polaron
+
 
 def runDiagrammaticMonteCarlo(polaron : Polaron, args : argparse.Namespace) -> dict :
     """Input parameter:
     - args : list that contains the fundamental parameters for the simulation
     """
+    #print(polaron.diagram)
     for _ in range(1, args.nsteps):
         try:
             if polaron.diagram['order'] == 0:
-                polaron.eval_add_internal()
+                number = random.randrange(len(polaron.zero_order_updates))
+                polaron.zero_order_updates[number]()
             else:
                 number = random.randrange(len(polaron.updates))
                 polaron.updates[number]()
-        except Exception as e:
-            print(f"Invalid step in DMC, {e}, {e.__class__}")
+        except Exception as error:
+            print(f"Invalid step in DMC, {error}, {error.__class__}")
             polaron.diagrams_info['Invalid_diagrams'] += 1
             continue
         polaron.eval_diagram_energy()
         polaron.diagrams_info['Order_sequence'].append(polaron.diagram['order'])
         polaron.diagrams_info['Energy_sequence'].append(polaron.diagram['total_energy'])
-    #end = time.time()
-    #print(end - start)
+        #print(polaron.diagram)
     return polaron.diagrams_info

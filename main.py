@@ -25,6 +25,8 @@ parser.add_argument('--g', dest='g', type=float, default=0.3,
                 help="electron phonon coupling constant")
 parser.add_argument('--time', dest='time_scaling', type=float, default=1.0,
                 help="time of electron propagator")
+parser.add_argument('--max_time', dest='max_time', type=int, default=30,
+                help="upper bound for lifetime of electron propagator")
 
 if __name__ == "__main__":
 

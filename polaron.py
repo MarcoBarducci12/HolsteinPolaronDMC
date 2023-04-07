@@ -5,6 +5,7 @@ import argparse
 class Polaron:
     def __init__(self, args: argparse.Namespace):
         self.create_initial_diagram(args)
+        self.set_zero_order_updates()
         self.set_updates()
         self.set_diagrams_info()
 
@@ -22,11 +23,17 @@ class Polaron:
                    'electron_rem_time': 1,
                    'ep_coupling': args.g,
                    'time_scaling': args.time_scaling,
+                   'max_time': args.max_time,
                    'total_energy': 0}
+
+    def set_zero_order_updates(self):
+        """Fill the list of possible updates to a zero order diagram"""
+        self.zero_order_updates = [self.eval_add_internal, self.eval_change_tau]
 
     def set_updates(self):
         """Fill the list of possible updates to the diagram"""
-        self.updates = [self.eval_add_internal, self.eval_remove_internal]
+        self.updates = [self.eval_add_internal, self.eval_remove_internal,
+                        self.eval_change_tau]
 
     def set_diagrams_info(self):
         """Set the initial values for diagram's info like initial order,
@@ -142,6 +149,57 @@ class Polaron:
             sample = np.random.uniform()
             if sample <= acceptance:
                 self.remove_internal(phonon_tag)
+
+    def change_tau(self, new_tau):
+        """Change the lifetime of the electron"""
+        self.diagram['time_scaling'] = new_tau
+
+    def weigth_ratio_change_tau(self, new_tau):
+        """Ratio between a proposed Feynman diagram with a different lifetime for
+        the quasiparticle and the current one.
+        First we evaluate the ratio between the time_scaling that appear
+        inside the integrals from the use of internal scaled time. Then we evaluate
+        the ratio between the propagators that figures out in the diagram"""
+        time_ratio = (new_tau/self.diagram['time_scaling'])** \
+                     (2*len(self.diagram['phonon_list']))
+
+        sum_phonons_time = 0
+        for phonon in self.diagram['phonon_list']:
+            sum_phonons_time += (phonon['rem_time'] - phonon['gen_time'])
+
+        propagators_ratio = np.exp(-(new_tau - self.diagram['time_scaling']) * \
+                    (self.diagram['phonon_energy']*sum_phonons_time + \
+                     self.diagram['electron_energy']))
+
+        if np.isinf(time_ratio*propagators_ratio) is True:
+            raise ValueError("""Overflow Error in evaluating weight ratio for
+                                change tau update \n""")
+        if abs(time_ratio*propagators_ratio) == 0.0:
+            raise ValueError("""Underflow error in evaluating weight ratio for
+                                change tau update \n""")
+
+        return propagators_ratio
+
+    def eval_change_tau(self):
+        """Choose one of the phonons randomly and evaluate
+        the acceptance probability for the removal update
+        """
+        new_tau = random.randint(1, self.diagram['max_time'])
+        while new_tau == self.diagram['time_scaling']:
+            new_tau = random.randint(1, self.diagram['max_time'])
+        try:
+            acceptance_prob = self.weigth_ratio_change_tau(new_tau) * 1
+        except ValueError as error:
+            print(f"ValueError: {error}, {error.__class__}")
+            raise ValueError("Remove internal will not be performed in DMC") from error
+
+        acceptance = self.metropolis(acceptance_prob)
+        if acceptance == 1:
+            self.change_tau(new_tau)
+        elif 0 <= acceptance < 1 :
+            sample = np.random.uniform()
+            if sample <= acceptance:
+                self.change_tau(new_tau)
 
     def eval_diagram_energy(self):
         """Evaluate energy of the system at a certain iteration"""
