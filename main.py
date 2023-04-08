@@ -8,7 +8,7 @@ import argparse
 import random
 import plot
 from montecarlo_parser import MonteCarloParser
-from dmc import run_diagrammatic_montecarlo
+from dmc import run_diagrammatic_montecarlo, run_thermalization_steps
 from polaron import Polaron
 
 
@@ -17,6 +17,8 @@ if __name__ == "__main__":
     mc_parser=MonteCarloParser()
     args=mc_parser.parser.parse_args()
     polaron = Polaron(args)
+    polaron = run_thermalization_steps(polaron, args)
+    polaron.update_diagrams_info()
     diagrams_info = run_diagrammatic_montecarlo(polaron, args)
     plot.plot_montecarlo(diagrams_info)
     plot.plot_green_function(diagrams_info['Tau_sequence'])

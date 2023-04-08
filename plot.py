@@ -70,5 +70,6 @@ def plot_green_function(tau_sequence : list):
 
     plt.xlabel(r'Lifetime $(\tau)$')
     plt.ylabel(r'$G(\tau)$')
+    plt.legend()
     plt.savefig("GreenFunctionHistogram.png")
     plt.show()

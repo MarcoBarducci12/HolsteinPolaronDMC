@@ -38,9 +38,9 @@ class Polaron:
     def set_diagrams_info(self):
         """Set the initial values for diagram's info like initial order,
         energy and number of invalid diagrams"""
-        self.diagrams_info = {'Order_sequence' : [self.diagram['order']],
-                             'Energy_sequence': [self.diagram['total_energy']],
-                             'Tau_sequence' : [self.diagram['time_scaling']],
+        self.diagrams_info = {'Order_sequence' : [],
+                             'Energy_sequence': [],
+                             'Tau_sequence' : [],
                              'Invalid_diagrams': 0}
 
     def metropolis(self, prob):
@@ -68,7 +68,11 @@ class Polaron:
         uniform rem_time between gen_time and 1
         p_reverse: removal of the phonon whose probability is 1/(# of phonons)
         """
-        return (1-phonon['gen_time'])/(self.diagram['order']+1)
+        alpha = self.diagram['phonon_energy']*self.diagram['time_scaling']
+        normalization = alpha/(1-np.exp(-alpha*(1-phonon['gen_time'])))
+        removal_time_prob = normalization * \
+                        np.exp(-alpha*(phonon['rem_time']-phonon['gen_time']))
+        return 1/((self.diagram['order']+1)*removal_time_prob)
 
     def add_internal(self, phonon):
         """Add a phonon to the diagram and update the order"""
@@ -123,7 +127,11 @@ class Polaron:
         uniform rem_time between gen_time and 1
         p_reverse: removal of the phonon whose probability is 1/(# of phonons)
         """
-        return self.diagram['order']/(1-phonon['gen_time'])
+        alpha = self.diagram['phonon_energy']*self.diagram['time_scaling']
+        normalization = alpha/(1-np.exp(-alpha*(1-phonon['gen_time'])))
+        removal_time_prob = normalization *  \
+                        np.exp(-alpha*(phonon['rem_time']-phonon['gen_time']))
+        return self.diagram['order']*removal_time_prob
 
     def remove_internal(self, phonon_tag):
         """Remove a phonon to the diagram and update the order"""
@@ -211,3 +219,9 @@ class Polaron:
                 energy += self.diagram['phonon_energy']*(phonon['rem_time']-phonon['gen_time'])
             energy = (energy - self.diagram['order'])/self.diagram['time_scaling']
             self.diagram['total_energy'] = energy
+
+    def update_diagrams_info(self):
+        """Update lists of diagrams order, energy and lifetime of the electron"""
+        self.diagrams_info['Order_sequence'].append(self.diagram['order'])
+        self.diagrams_info['Energy_sequence'].append(self.diagram['total_energy'])
+        self.diagrams_info['Tau_sequence'].append(self.diagram['time_scaling'])

@@ -13,6 +13,8 @@ class MonteCarloParser:
             different values from the distribution.""")
         self.parser.add_argument('--nsteps', dest='nsteps', type=int, default=10000,
                         help="Number of MonteCarlo steps (samples)")
+        self.parser.add_argument('--nsteps_burn', dest='nsteps_burn', type=int, default=10000,
+                        help="Number of thermalization steps for the Markov Chain")
         self.parser.add_argument('--order', dest='order', type=int, default=0,
                         help="Order of the initial diagram")
         self.parser.add_argument('--mu', dest='mu', type=float, default=0.0,
