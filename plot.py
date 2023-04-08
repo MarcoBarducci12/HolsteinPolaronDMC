@@ -18,7 +18,14 @@ def eval_mean_order(order_sequence : list) -> float :
     """
     return np.mean(np.array(order_sequence))
 
-def plotMonteCarlo(diagrams_info : dict):
+def get_bins_edges(order_sequence : list) -> list:
+    """Return a list of left bin edges and right edge of last bin.
+    Each bin is centered on each of the possible values"""
+    n_bins = max(order_sequence) + 1
+    bins_edges = np.arange(n_bins+1) - 0.5
+    return bins_edges
+
+def plot_montecarlo(diagrams_info : dict):
     """ Allow use of LaTeX font in graphics
         Return an histogram:
        -optimized binning divisions
@@ -26,8 +33,9 @@ def plotMonteCarlo(diagrams_info : dict):
        -plot the sampled probability distribution vs the analitycal one
     """
     plt.rcParams['text.usetex'] = True
-    n , bins, patches = plt.hist(x=diagrams_info['Order_sequence'], density=True, bins='auto',
-             color='blue', alpha=0.8)
+    n , bins, patches = plt.hist(x=diagrams_info['Order_sequence'], density=True,
+                        bins=get_bins_edges(diagrams_info['Order_sequence']),
+                        ec='black', fc='blue', alpha=0.8)
 
     """Define labels entry for legend"""
     mean_order = eval_mean_order(diagrams_info['Order_sequence'])
@@ -47,4 +55,20 @@ def plotMonteCarlo(diagrams_info : dict):
     plt.yscale("log")
     plt.legend(handles=legend_elements)
     plt.savefig("DiagramOrderDistribution.png")
+    plt.show()
+
+def plot_green_function(tau_sequence : list):
+    """ Allow use of LaTeX font in graphics
+        Return an histogram:
+       -optimized binning divisions
+       -occurrences for each bin are normalized to the number of samples
+       -plot the sampled probability distribution vs the analitycal one
+    """
+    plt.rcParams['text.usetex'] = True
+    plt.hist(x=tau_sequence, density=True, bins=50,
+             ec='black', fc='blue', alpha=0.8, label=r"Sampled $G(\tau)$")
+
+    plt.xlabel(r'Lifetime $(\tau)$')
+    plt.ylabel(r'$G(\tau)$')
+    plt.savefig("GreenFunctionHistogram.png")
     plt.show()

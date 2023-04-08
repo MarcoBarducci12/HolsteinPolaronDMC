@@ -40,12 +40,12 @@ class Polaron:
         energy and number of invalid diagrams"""
         self.diagrams_info = {'Order_sequence' : [self.diagram['order']],
                              'Energy_sequence': [self.diagram['total_energy']],
+                             'Tau_sequence' : [self.diagram['time_scaling']],
                              'Invalid_diagrams': 0}
 
     def metropolis(self, prob):
         """Using metropolis choice we ensure detailed balance for Markov chain"""
-        acceptance = min(1, prob)
-        return acceptance
+        return min(1, prob)
 
     def add_phonon_scaling(self):
         """Evaluate scaling parameter due to electron phonon coupling"""
@@ -80,13 +80,13 @@ class Polaron:
         add it to the diagram"""
         phonon = self.generate_phonon()
         try:
-            prob = self.weigth_ratio_add(phonon) * \
+            ratio_acceptance_probs = self.weigth_ratio_add(phonon) * \
                 self.proposal_add_ratio(phonon)
         except ValueError as error:
             print(f"ValueError: {error}, {error.__class__}")
             raise ValueError("Add internal will not be performed in DMC") from error
 
-        acceptance = self.metropolis(prob)
+        acceptance = self.metropolis(ratio_acceptance_probs)
         if acceptance == 1:
             self.add_internal(phonon)
         elif 0 <= acceptance < 1:
@@ -136,13 +136,13 @@ class Polaron:
         """
         phonon, phonon_tag = self.get_phonon()
         try:
-            acceptance_prob = self.weigth_ratio_remove(phonon) * \
+            ratio_acceptance_probs = self.weigth_ratio_remove(phonon) * \
                 self.proposal_remove_ratio(phonon)
         except ValueError as error:
             print(f"ValueError: {error}, {error.__class__}")
             raise ValueError("Remove internal will not be performed in DMC") from error
 
-        acceptance = self.metropolis(acceptance_prob)
+        acceptance = self.metropolis(ratio_acceptance_probs)
         if acceptance == 1:
             self.remove_internal(phonon_tag)
         elif 0 <= acceptance < 1 :
@@ -184,16 +184,16 @@ class Polaron:
         """Choose one of the phonons randomly and evaluate
         the acceptance probability for the removal update
         """
-        new_tau = random.randint(1, self.diagram['max_time'])
+        new_tau = np.random.uniform(0, self.diagram['max_time'])
         while new_tau == self.diagram['time_scaling']:
-            new_tau = random.randint(1, self.diagram['max_time'])
+            new_tau = np.random.uniform(0, self.diagram['max_time'])
         try:
-            acceptance_prob = self.weigth_ratio_change_tau(new_tau) * 1
+            ratio_acceptance_probs = self.weigth_ratio_change_tau(new_tau)
         except ValueError as error:
             print(f"ValueError: {error}, {error.__class__}")
             raise ValueError("Remove internal will not be performed in DMC") from error
 
-        acceptance = self.metropolis(acceptance_prob)
+        acceptance = self.metropolis(ratio_acceptance_probs)
         if acceptance == 1:
             self.change_tau(new_tau)
         elif 0 <= acceptance < 1 :
