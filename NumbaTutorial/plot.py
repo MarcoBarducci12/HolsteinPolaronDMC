@@ -3,7 +3,7 @@ distribution"""
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_distribution(occurrences : list, max_time):
+def plot_distribution(occurrences, max_time):
     """ Allow use of LaTeX font in graphics
         Return an histogram:
        -optimized binning divisions
